@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Cute Clicker</title>
+  <style>
+    body {
+      font-family: 'Comic Sans MS', 'Comic Sans', cursive, sans-serif;
+      background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+      color: #282c34;
+      text-align: center;
+      margin-top: 60px;
+    }
+    h1 {
+      font-size: 3.5rem;
+      background: linear-gradient(90deg, #ff758c 10%, #ff7eb3 90%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+      letter-spacing: 2px;
+      animation: funBounce 2s infinite alternate;
+    }
+    @keyframes funBounce {
+      0% { transform: scale(1);}
+      100% { transform: scale(1.05);}
+    }
+    #counter {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      color: #3c3fff;
+      text-shadow: 2px 2px 10px #ffb347;
+    }
+    #level {
+      font-size: 2rem;
+      color: #ff7eb3;
+      margin-bottom: 1rem;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+    #rebirth-section {
+      position: fixed;
+      top: 90px;
+      right: 40px;
+      width: 350px;
+      background: linear-gradient(90deg, #fff5c3 0%, #ffecd2 100%);
+      border-radius: 18px;
+      padding: 1.2rem;
+      box-shadow: 0 2px 12px rgba(255, 156, 186, 0.14);
+      text-align: left;
+      z-index: 100;
+    }
+    #rebirth-btn {
+      margin: 10px 0 0 0;
+      padding: 1rem 2rem;
+      border-radius: 12px;
+      border: 3px solid #ffb347;
+      background: linear-gradient(90deg, #fcb69f 0%, #ffecd2 100%);
+      color: #282c34;
+      font-size: 1.2rem;
+      cursor: pointer;
+      font-weight: bold;
+      box-shadow: 0 4px 12px 0 rgba(255, 156, 186, 0.18);
+      transition: background 0.2s, border 0.2s, transform 0.1s;
+      width: 100%;
+      display: block;
+    }
+    #rebirth-btn:disabled {
+      background: #cccccc;
+      color: #888;
+      border-color: #bbb;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    #rebirth-info {
+      font-size: 1.1rem;
+      margin-bottom: 0.6rem;
+      color: #e67c7c;
+    }
+    #rebirth-count {
+      font-size: 1.2rem;
+      color: #fb5dad;
+      margin-bottom: 0.4rem;
+      font-weight: bold;
+    }
+    #rebirth-multiplier {
+      font-size: 1.2rem;
+      color: #21c87a;
+      font-weight: bold;
+    }
+    #character-btn {
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      margin-bottom: 1rem;
+      outline: none;
+      display: inline-block;
+    }
+    #character-img {
+      width: 220px;
+      height: 220px;
+      display: block;
+      margin: 0 auto;
+      will-change: transform;
+      animation: rotateSideToSide 3s infinite alternate ease-in-out;
+      transition: transform 0.15s;
+    }
+    @keyframes rotateSideToSide {
+      0% { transform: rotate(-15deg);}
+      100% { transform: rotate(15deg);}
+    }
+    .upgrade-section {
+      margin-top: 2rem;
+      background: linear-gradient(90deg,#fcb69f33 0%,#ffecd255 100%);
+      padding: 1.5rem;
+      border-radius: 18px;
+      box-shadow: 0 2px 12px rgba(255, 156, 186, 0.14);
+      width: 350px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .upgrade-section h2 {
+      margin-bottom: 1rem;
+      color: #ff758c;
+      font-size: 2rem;
+      letter-spacing: 1px;
+    }
+    .upgrade-btn {
+      margin: 10px;
+      padding: 1rem 2rem;
+      border-radius: 12px;
+      border: 3px solid #ffb347;
+      background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
+      color: #282c34;
+      font-size: 1.2rem;
+      cursor: pointer;
+      font-weight: bold;
+      box-shadow: 0 4px 12px 0 rgba(137, 255, 145, 0.18);
+      transition: background 0.2s, border 0.2s, transform 0.1s;
+    }
+    .upgrade-btn:hover:enabled {
+      background: linear-gradient(90deg, #38f9d7 0%, #43e97b 100%);
+      border-color: #ff758c;
+      transform: scale(1.04);
+    }
+    .upgrade-btn:disabled {
+      background: #cccccc;
+      color: #888;
+      border-color: #bbb;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    #cps, #click-power {
+      margin-top: 1.2rem;
+      font-size: 1.5rem;
+      color: #fb5dad;
+      font-weight: bold;
+      text-shadow: 1px 1px 6px #fff5c3;
+      letter-spacing: 1px;
+    }
+    #click-power {
+      color: #21c87a;
+    }
+    @media (max-width: 900px) {
+      #rebirth-section {
+        position: static;
+        margin: 2rem auto 0 auto;
+        width: 95vw;
+        min-width: 0;
+        max-width: 98vw;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Cute Clicker</h1>
+  <div id="level">Level 0: Mushroom</div>
+  <div id="counter">0</div>
+  <button id="character-btn" aria-label="Click the mushroom!">
+    <img
+      id="character-img"
+      src="https://i.imgur.com/MVDFWs3.png"
+      alt="Cute Mushroom"
+    />
+  </button>
+  <div id="click-power">Click Power: 1</div>
+  <div id="cps">Clicks per second: 0</div>
+  <div id="rebirth-section">
+    <div id="rebirth-count">Rebirths: 0</div>
+    <div id="rebirth-multiplier">Rebirth Multiplier: x1</div>
+    <div id="rebirth-info">Rebirth for x1.5 more clicks per click!<br>
+      Cost: <span id="rebirth-cost">100,000,000</span> Clicks
+    </div>
+    <button id="rebirth-btn" disabled>Rebirth!</button>
+  </div>
+  <div class="upgrade-section">
+    <h2>Upgrades</h2>
+    <button id="auto-click" class="upgrade-btn" disabled>
+      Buy Auto Clicker (Cost: <span id="auto-cost">50</span>)
+    </button>
+    <br />
+    <button id="double-click" class="upgrade-btn" disabled>
+      Double Click Power (Cost: <span id="double-cost">30</span>)
+    </button>
+    <br />
+    <button id="super-click" class="upgrade-btn" disabled>
+      Super Click Power (Cost: <span id="super-cost">100</span>)
+    </button>
+  </div>
+  <script>
+    let count = 0;
+    let autoClickers = 0;
+    let autoClickerCost = 50;
+    let clickPowerBase = 1;
+    let clickPower = 1;
+    let doubleClickLevel = 0;
+    let doubleClickCost = 30;
+    let superClickLevel = 0;
+    let superClickCost = 100;
+    let currentLevel = 0;
+
+    // Rebirth system
+    let rebirths = 0;
+    let rebirthCost = 100000000; // 100,000,000
+    let rebirthMultiplier = 1; // Stays at 1 until first rebirth, then 1.5, 2.0, etc.
+    const REBIRTH_COST_INCREMENT = 50000000; // 50,000,000
+
+    const LEVELS = [
+      {
+        name: "Mushroom",
+        img: "https://i.imgur.com/MVDFWs3.png",
+        minClicks: 0,
+      },
+      {
+        name: "Flower",
+        img: "https://i.imgur.com/YF9nP2m.png",
+        minClicks: 1000,
+      },
+      {
+        name: "Cats",
+        img: "https://i.imgur.com/TZoyIac.png",
+        minClicks: 250000,
+      },
+      {
+        name: "Dog",
+        img: "https://i.imgur.com/y9pnozS.png",
+        minClicks: 10000000,
+      }
+    ];
+
+    const counter = document.getElementById('counter');
+    const characterBtn = document.getElementById('character-btn');
+    const characterImg = document.getElementById('character-img');
+    const levelText = document.getElementById('level');
+    const cpsDisplay = document.getElementById('cps');
+    const autoClickBtn = document.getElementById('auto-click');
+    const autoCost = document.getElementById('auto-cost');
+    const clickPowerDisplay = document.getElementById('click-power');
+    const doubleClickBtn = document.getElementById('double-click');
+    const doubleCost = document.getElementById('double-cost');
+    const superClickBtn = document.getElementById('super-click');
+    const superCost = document.getElementById('super-cost');
+    const rebirthBtn = document.getElementById('rebirth-btn');
+    const rebirthCostSpan = document.getElementById('rebirth-cost');
+    const rebirthCount = document.getElementById('rebirth-count');
+    const rebirthMultiplierSpan = document.getElementById('rebirth-multiplier');
+
+    function funFlash() {
+      counter.style.color = "#fb5dad";
+      setTimeout(() => {
+        counter.style.color = "#3c3fff";
+      }, 180);
+    }
+
+    function updateLevel() {
+      let newLevel = currentLevel;
+      for (let i = LEVELS.length - 1; i >= 0; --i) {
+        if (count >= LEVELS[i].minClicks && i > currentLevel) {
+          newLevel = i;
+          break;
+        }
+      }
+      if (newLevel !== currentLevel) {
+        currentLevel = newLevel;
+        characterImg.src = LEVELS[currentLevel].img;
+        levelText.textContent = `Level ${currentLevel}: ${LEVELS[currentLevel].name}`;
+      }
+      if (levelText.textContent === "" || count < LEVELS[1].minClicks) {
+        characterImg.src = LEVELS[currentLevel].img;
+        levelText.textContent = `Level ${currentLevel}: ${LEVELS[currentLevel].name}`;
+      }
+    }
+
+    function formatRebirthMultiplier(mult) {
+      // Show integer if whole number, else show one or two decimals
+      return Number.isInteger(mult) ? mult.toString() : mult.toFixed(2).replace(/\.00$/, '');
+    }
+
+    function updateRebirthDisplay() {
+      rebirthCount.textContent = "Rebirths: " + rebirths;
+      rebirthMultiplierSpan.textContent = "Rebirth Multiplier: x" + formatRebirthMultiplier(rebirthMultiplier);
+      rebirthCostSpan.textContent = rebirthCost.toLocaleString();
+      rebirthBtn.disabled = count < rebirthCost;
+    }
+
+    function recalcClickPower() {
+      // Base is 1, plus upgrades, times rebirth multiplier
+      clickPower = clickPowerBase * Math.pow(2, doubleClickLevel) + (superClickLevel > 0 ? 10 * superClickLevel : 0);
+      clickPower *= rebirthMultiplier;
+      clickPowerDisplay.textContent = 'Click Power: ' + clickPower.toFixed(2);
+    }
+
+    function updateDisplay() {
+      counter.textContent = count;
+      cpsDisplay.textContent = 'Clicks per second: ' + autoClickers;
+      recalcClickPower();
+      autoCost.textContent = autoClickerCost;
+      doubleCost.textContent = doubleClickCost;
+      superCost.textContent = superClickCost;
+      autoClickBtn.disabled = count < autoClickerCost;
+      doubleClickBtn.disabled = count < doubleClickCost;
+      superClickBtn.disabled = count < superClickCost;
+      updateLevel();
+      updateRebirthDisplay();
+    }
+
+    characterBtn.addEventListener('click', () => {
+      count += clickPower;
+      funFlash();
+      characterImg.style.transition = "transform 0.15s";
+      characterImg.style.transform = "scale(0.95)";
+      setTimeout(() => {
+        characterImg.style.transform = "";
+      }, 120);
+      updateDisplay();
+    });
+
+    autoClickBtn.addEventListener('click', () => {
+      if (count >= autoClickerCost) {
+        count -= autoClickerCost;
+        autoClickers++;
+        autoClickerCost = Math.floor(autoClickerCost * 1.5);
+        updateDisplay();
+      }
+    });
+
+    doubleClickBtn.addEventListener('click', () => {
+      if (count >= doubleClickCost) {
+        count -= doubleClickCost;
+        doubleClickLevel++;
+        doubleClickCost = Math.floor(doubleClickCost * 2.5);
+        updateDisplay();
+      }
+    });
+
+    superClickBtn.addEventListener('click', () => {
+      if (count >= superClickCost) {
+        count -= superClickCost;
+        superClickLevel++;
+        superClickCost = Math.floor(superClickCost * 3);
+        updateDisplay();
+      }
+    });
+
+    rebirthBtn.addEventListener('click', () => {
+      if (count >= rebirthCost) {
+        count -= rebirthCost;
+        rebirths++;
+        rebirthMultiplier = 1 + rebirths * 0.5;
+        count = 0;
+        autoClickers = 0;
+        autoClickerCost = 50;
+        doubleClickLevel = 0;
+        doubleClickCost = 30;
+        superClickLevel = 0;
+        superClickCost = 100;
+        currentLevel = 0;
+        rebirthCost = 100000000 + REBIRTH_COST_INCREMENT * rebirths;
+        updateDisplay();
+      }
+    });
+
+    setInterval(() => {
+      if (autoClickers > 0) {
+        count += autoClickers * clickPower;
+        funFlash();
+        updateDisplay();
+      }
+    }, 1000);
+
+    setInterval(updateDisplay, 100);
+
+    updateDisplay();
+  </script>
+</body>
+</html>
