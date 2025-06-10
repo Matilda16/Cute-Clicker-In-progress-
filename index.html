@@ -256,29 +256,77 @@
     #back-to-game:hover {
       background: #fb5dad;
     }
-    /* Hide rebirth on shop */
-    #shop-page #rebirth-section { display: none; }
-    #character-btn {
-      background: none;
-      border: none;
-      padding: 0;
+    #shop-section {
+      margin: 2em auto 0 auto;
+      max-width: 400px;
+      background: #fffef7;
+      border-radius: 20px;
+      box-shadow: 0 2px 16px #ffd5d5;
+      padding: 2em;
+      text-align: left;
+    }
+    #shop-section .click-rewards-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: linear-gradient(90deg, #ffe0ba 0%, #ffe5ec 100%);
+      padding: 1.3em 1em;
+      border-radius: 14px;
+      box-shadow: 0 1px 6px #ffe0ba66;
+      margin-bottom: 1.1em;
+      border: 2px solid #ffb347;
       cursor: pointer;
-      margin-bottom: 1rem;
-      outline: none;
-      display: inline-block;
+      font-weight: bold;
+      font-size: 1.17em;
+      color: #ff8c2b;
+      transition: background 0.2s, border 0.2s, transform 0.1s;
+      width: 100%;
+      position: relative;
     }
-    #character-img {
-      width: 220px;
-      height: 220px;
-      display: block;
-      margin: 0 auto;
-      will-change: transform;
-      animation: rotateSideToSide 3s infinite alternate ease-in-out;
-      transition: transform 0.15s;
+    #shop-section .click-rewards-btn:disabled {
+      background: #cccccc;
+      color: #888;
+      border-color: #bbb;
+      cursor: not-allowed;
+      box-shadow: none;
     }
-    @keyframes rotateSideToSide {
-      0% { transform: rotate(-15deg);}
-      100% { transform: rotate(15deg);}
+    #shop-section .click-rewards-btn .main {
+      font-size: 1.17em;
+      font-weight: bold;
+      color: #ff8c2b;
+      margin-bottom: .2em;
+      text-align: center;
+    }
+    #shop-section .click-rewards-btn .sub {
+      font-size: 1.07em;
+      color: #2e6b72;
+      margin-bottom: .3em;
+      text-align: center;
+      font-weight: normal;
+    }
+    #shop-section .click-rewards-btn .desc {
+      font-size: 0.98em;
+      color: #5d4f20;
+      margin-bottom: .3em;
+      text-align: center;
+      font-weight: normal;
+    }
+    #shop-section .click-rewards-btn .cost {
+      font-size: 1em;
+      color: #074b4f;
+      margin-top: .5em;
+      text-align: center;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 0.2em;
+    }
+    #shop-section .reward-status {
+      margin-top: .7em;
+      font-size: 1.02em;
+      color: #2e6b72;
+      min-height: 1.7em;
+      text-align: center;
     }
     .upgrade-section {
       margin-top: 2rem;
@@ -331,6 +379,17 @@
     }
     #click-power {
       color: #21c87a;
+    }
+    #reset-progress {
+      margin-top:2em;
+      background:#fb5dad;
+      color:#fff;
+      border:none;
+      border-radius:12px;
+      padding:0.8em 2em;
+      font-weight:bold;
+      box-shadow:0 2px 12px #ffb5d6;
+      cursor:pointer;
     }
     @media (max-width: 900px) {
       #rebirth-section {
@@ -427,6 +486,7 @@
         Super Click Power (Cost: <span id="super-cost">100</span>)
       </button>
     </div>
+    <button id="reset-progress">Reset Progress</button>
   </div>
   <div id="shop-page">
     <div id="shop-header">Super Shop</div>
@@ -434,10 +494,22 @@
       <img src="https://i.imgur.com/AbX6z6F.png" alt="Super Money" />
       <span id="shop-super-money-amount">0</span>
     </div>
-    <p style="font-size:1.2rem;">Welcome to the Super Shop! (Add your shop items here!)</p>
+    <div id="shop-section">
+      <button class="click-rewards-btn" id="click-rewards-btn">
+        <div class="main">Click Rewards!</div>
+        <div class="sub">Random Rewards</div>
+        <div class="desc">
+          Every 1-5 minutes, get a random reward for <b>$100</b>
+          <img src="https://i.imgur.com/AbX6z6F.png" alt="Super Money" style="width:16px;height:16px;vertical-align:middle;">
+        </div>
+        <div class="cost" id="click-rewards-cost">Unlock for $100 <img src="https://i.imgur.com/AbX6z6F.png" alt="Super Money" style="width:16px;height:16px;vertical-align:middle;"></div>
+      </button>
+      <div class="reward-status" id="reward-status"></div>
+    </div>
     <button id="back-to-game">Back to Game</button>
   </div>
   <script>
+    // JS LOGIC (see previous messages for explanations)
     let count = 0;
     let autoClickers = 0;
     let autoClickerCost = 50;
@@ -448,49 +520,24 @@
     let superClickLevel = 0;
     let superClickCost = 100;
     let currentLevel = 0;
-
-    // Rebirth system
     let rebirths = 0;
-    let rebirthCost = 100000000; // 100,000,000
+    let rebirthCost = 100000000;
     let rebirthMultiplier = 1;
-    const REBIRTH_COST_INCREMENT = 50000000; // 50,000,000
-
-    // Super money system
+    const REBIRTH_COST_INCREMENT = 50000000;
     let superMoney = 0;
-
+    let clickRewardsUnlocked = false;
+    let nextRewardAvailableAt = 0;
     const LEVELS = [
-      {
-        name: "Mushroom",
-        img: "https://i.imgur.com/MVDFWs3.png",
-        minClicks: 0,
-      },
-      {
-        name: "Flower",
-        img: "https://i.imgur.com/YF9nP2m.png",
-        minClicks: 1000,
-      },
-      {
-        name: "Cats",
-        img: "https://i.imgur.com/TZoyIac.png",
-        minClicks: 250000,
-      },
-      {
-        name: "Dog",
-        img: "https://i.imgur.com/y9pnozS.png",
-        minClicks: 5000000,
-      },
-      {
-        name: "Fox",
-        img: "https://i.imgur.com/DWBsqzH.png",
-        minClicks: 15000000,
-      },
-      {
-        name: "Cow",
-        img: "https://i.imgur.com/4QTiWho.png",
-        minClicks: 50000000,
-      }
+      { name: "Mushroom", img: "https://i.imgur.com/MVDFWs3.png", minClicks: 0 },
+      { name: "Flower", img: "https://i.imgur.com/YF9nP2m.png", minClicks: 1000 },
+      { name: "Cats", img: "https://i.imgur.com/TZoyIac.png", minClicks: 250000 },
+      { name: "Dog", img: "https://i.imgur.com/y9pnozS.png", minClicks: 5000000 },
+      { name: "Fox", img: "https://i.imgur.com/DWBsqzH.png", minClicks: 15000000 },
+      { name: "Cow", img: "https://i.imgur.com/4QTiWho.png", minClicks: 50000000 },
+      { name: "Bunny", img: "https://i.imgur.com/Ua6rXtO.png", minClicks: 100000000 },
+      { name: "Deer", img: "https://i.imgur.com/cCg2tTk.png", minClicks: 250000000 },
+      { name: "Snake", img: "https://i.imgur.com/AUnDJpk.png", minClicks: 700000000 },
     ];
-
     const counter = document.getElementById('counter');
     const characterBtn = document.getElementById('character-btn');
     const characterImg = document.getElementById('character-img');
@@ -510,50 +557,40 @@
     const rebirthSuperCashAmount = document.getElementById('rebirth-super-cash-amount');
     const superMoneyDisplay = document.getElementById('super-money-amount');
     const shopSuperMoneyDisplay = document.getElementById('shop-super-money-amount');
-
-    // Next level box elements
     const nextLevelBox = document.getElementById('next-level-box');
     const nextLevelTitle = document.getElementById('next-level-title');
     const nextLevelImg = document.getElementById('next-level-img');
     const nextLevelReq = document.getElementById('next-level-req');
     const nextLevelCurrent = document.getElementById('next-level-current');
     const nextLevelTotal = document.getElementById('next-level-total');
-
-    // Shop tab/page
     const superShopTab = document.getElementById('super-shop-tab');
     const gamePage = document.getElementById('game-page');
     const shopPage = document.getElementById('shop-page');
     const backToGameBtn = document.getElementById('back-to-game');
-
+    const clickRewardsBtn = document.getElementById('click-rewards-btn');
+    const clickRewardsCost = document.getElementById('click-rewards-cost');
+    const rewardStatus = document.getElementById('reward-status');
     superShopTab.addEventListener('click', () => {
       gamePage.classList.remove('active');
       shopPage.classList.add('active');
       updateSuperMoneyDisplays();
+      updateShopUI();
     });
-
     backToGameBtn.addEventListener('click', () => {
       shopPage.classList.remove('active');
       gamePage.classList.add('active');
       updateSuperMoneyDisplays();
     });
-
-    function getNextRebirthSuperCash() {
-      return (rebirths + 1 > 10) ? 100 : 50;
-    }
-
+    function getNextRebirthSuperCash() { return (rebirths + 1 > 10) ? 100 : 50; }
     function funFlash() {
       counter.style.color = "#fb5dad";
-      setTimeout(() => {
-        counter.style.color = "#3c3fff";
-      }, 180);
+      setTimeout(() => { counter.style.color = "#3c3fff"; }, 180);
     }
-
     function updateLevel() {
       let newLevel = currentLevel;
       for (let i = LEVELS.length - 1; i >= 0; --i) {
         if (count >= LEVELS[i].minClicks && i > currentLevel) {
-          newLevel = i;
-          break;
+          newLevel = i; break;
         }
       }
       if (newLevel !== currentLevel) {
@@ -566,7 +603,6 @@
         levelText.textContent = `Level ${currentLevel}: ${LEVELS[currentLevel].name}`;
       }
     }
-
     function updateNextLevelBox() {
       let nextIdx = currentLevel + 1;
       if (nextIdx < LEVELS.length) {
@@ -581,11 +617,9 @@
         nextLevelBox.style.display = "none";
       }
     }
-
     function formatRebirthMultiplier(mult) {
       return Number.isInteger(mult) ? mult.toString() : mult.toFixed(1).replace(/\.0$/, '');
     }
-
     function updateRebirthDisplay() {
       rebirthCount.textContent = "Rebirths: " + rebirths;
       rebirthMultiplierSpan.textContent = "Rebirth Multiplier: x" + formatRebirthMultiplier(rebirthMultiplier);
@@ -593,18 +627,15 @@
       rebirthBtn.disabled = count < rebirthCost;
       rebirthSuperCashAmount.textContent = getNextRebirthSuperCash();
     }
-
     function updateSuperMoneyDisplays() {
       superMoneyDisplay.textContent = superMoney.toLocaleString();
       shopSuperMoneyDisplay.textContent = superMoney.toLocaleString();
     }
-
     function recalcClickPower() {
       clickPower = clickPowerBase * Math.pow(2, doubleClickLevel) + (superClickLevel > 0 ? 10 * superClickLevel : 0);
       clickPower *= rebirthMultiplier;
       clickPowerDisplay.textContent = 'Click Power: ' + clickPower.toFixed(2);
     }
-
     function updateDisplay() {
       counter.textContent = count;
       cpsDisplay.textContent = 'Clicks per second: ' + autoClickers;
@@ -619,10 +650,90 @@
       updateRebirthDisplay();
       updateSuperMoneyDisplays();
       updateNextLevelBox();
+      updateShopUI();
     }
-
+    // ---- SHOP: Click Rewards ----
+    function updateShopUI() {
+      if (!clickRewardsUnlocked) {
+        clickRewardsBtn.disabled = superMoney < 100;
+        clickRewardsCost.style.display = "";
+        clickRewardsBtn.querySelector('.desc').innerHTML = `
+          Every 1-5 minutes, get a random reward for <b>$100</b>
+          <img src="https://i.imgur.com/AbX6z6F.png" alt="Super Money" style="width:16px;height:16px;vertical-align:middle;">
+        `;
+        clickRewardsCost.innerHTML = `Unlock for $100 <img src="https://i.imgur.com/AbX6z6F.png" alt="Super Money" style="width:16px;height:16px;vertical-align:middle;">`;
+      } else {
+        clickRewardsBtn.disabled = (Date.now() < nextRewardAvailableAt);
+        clickRewardsCost.style.display = "none";
+        clickRewardsBtn.querySelector('.desc').innerHTML = `
+          Every 1-5 minutes, get a random reward <b>for FREE!</b>
+        `;
+      }
+      if (clickRewardsUnlocked) {
+        const msLeft = nextRewardAvailableAt - Date.now();
+        if (msLeft > 0) {
+          let min = Math.floor(msLeft/60000), sec = Math.floor((msLeft%60000)/1000);
+          clickRewardsBtn.querySelector('.main').textContent = `Click Rewards! (${min}:${sec.toString().padStart(2,'0')})`;
+          clickRewardsBtn.disabled = true;
+        } else {
+          clickRewardsBtn.querySelector('.main').textContent = "Click Rewards!";
+          clickRewardsBtn.disabled = false;
+        }
+      } else {
+        clickRewardsBtn.querySelector('.main').textContent = "Click Rewards!";
+      }
+    }
+    clickRewardsBtn.addEventListener('click', () => {
+      if (!clickRewardsUnlocked) {
+        if (superMoney >= 100) {
+          superMoney -= 100;
+          clickRewardsUnlocked = true;
+          saveProgress();
+          updateDisplay();
+        }
+        return;
+      }
+      if (Date.now() < nextRewardAvailableAt) return;
+      const roll = Math.random() * 100;
+      let rewardMsg = "";
+      if (roll < 5) {
+        activateClickRateMultiplier(2, 120);
+        rewardMsg = "🎉 2x clicking rate for 2 minutes!";
+      } else if (roll < 20) {
+        activateClickRateMultiplier(2, 60);
+        rewardMsg = "✨ 2x clicking rate for 1 minute!";
+      } else if (roll < 40) {
+        const rewardClicks = Math.round(2000 + Math.random() * 1000);
+        count += rewardClicks;
+        rewardMsg = `💰 +${rewardClicks.toLocaleString()} clicks!`;
+      } else if (roll < 65) {
+        superClickLevel++;
+        rewardMsg = "🆙 Free Super Click upgrade!";
+      } else {
+        const rewardClicks = Math.round(1 + Math.random() * (100000000 - 1));
+        count += rewardClicks;
+        rewardMsg = `🌟 Random bonus: +${rewardClicks.toLocaleString()} clicks!`;
+      }
+      const mins = 1 + Math.random()*4;
+      nextRewardAvailableAt = Date.now() + Math.floor(mins * 60000);
+      rewardStatus.textContent = rewardMsg;
+      saveProgress();
+      updateDisplay();
+      setTimeout(() => { rewardStatus.textContent = ""; }, 9000);
+    });
+    let clickRateMultiplier = 1;
+    let clickRateMultiplierTimeout = null;
+    function activateClickRateMultiplier(mult, seconds) {
+      clearTimeout(clickRateMultiplierTimeout);
+      clickRateMultiplier = mult;
+      updateDisplay();
+      clickRateMultiplierTimeout = setTimeout(() => {
+        clickRateMultiplier = 1;
+        updateDisplay();
+      }, seconds * 1000);
+    }
     characterBtn.addEventListener('click', () => {
-      count += clickPower;
+      count += clickPower * clickRateMultiplier;
       funFlash();
       characterImg.style.transition = "transform 0.15s";
       characterImg.style.transform = "scale(0.95)";
@@ -630,35 +741,35 @@
         characterImg.style.transform = "";
       }, 120);
       updateDisplay();
+      saveProgress();
     });
-
     autoClickBtn.addEventListener('click', () => {
       if (count >= autoClickerCost) {
         count -= autoClickerCost;
         autoClickers++;
         autoClickerCost = Math.floor(autoClickerCost * 1.5);
         updateDisplay();
+        saveProgress();
       }
     });
-
     doubleClickBtn.addEventListener('click', () => {
       if (count >= doubleClickCost) {
         count -= doubleClickCost;
         doubleClickLevel++;
         doubleClickCost = Math.floor(doubleClickCost * 2.5);
         updateDisplay();
+        saveProgress();
       }
     });
-
     superClickBtn.addEventListener('click', () => {
       if (count >= superClickCost) {
         count -= superClickCost;
         superClickLevel++;
         superClickCost = Math.floor(superClickCost * 3);
         updateDisplay();
+        saveProgress();
       }
     });
-
     rebirthBtn.addEventListener('click', () => {
       if (count >= rebirthCost) {
         count -= rebirthCost;
@@ -679,19 +790,73 @@
         currentLevel = 0;
         rebirthCost = 100000000 + REBIRTH_COST_INCREMENT * rebirths;
         updateDisplay();
+        saveProgress();
       }
     });
-
     setInterval(() => {
       if (autoClickers > 0) {
-        count += autoClickers * clickPower;
+        count += autoClickers * clickPower * clickRateMultiplier;
         funFlash();
         updateDisplay();
+        saveProgress();
       }
     }, 1000);
-
-    setInterval(updateDisplay, 100);
-
+    setInterval(() => {
+      saveProgress();
+      updateShopUI();
+    }, 3000);
+    function saveProgress() {
+      const gameState = {
+        count,
+        autoClickers,
+        autoClickerCost,
+        clickPowerBase,
+        doubleClickLevel,
+        doubleClickCost,
+        superClickLevel,
+        superClickCost,
+        currentLevel,
+        rebirths,
+        rebirthCost,
+        rebirthMultiplier,
+        superMoney,
+        clickRewardsUnlocked,
+        nextRewardAvailableAt,
+      };
+      localStorage.setItem('cuteClickerSave', JSON.stringify(gameState));
+    }
+    function loadProgress() {
+      const save = localStorage.getItem('cuteClickerSave');
+      if (!save) return;
+      try {
+        const s = JSON.parse(save);
+        count = s.count ?? 0;
+        autoClickers = s.autoClickers ?? 0;
+        autoClickerCost = s.autoClickerCost ?? 50;
+        clickPowerBase = s.clickPowerBase ?? 1;
+        doubleClickLevel = s.doubleClickLevel ?? 0;
+        doubleClickCost = s.doubleClickCost ?? 30;
+        superClickLevel = s.superClickLevel ?? 0;
+        superClickCost = s.superClickCost ?? 100;
+        currentLevel = s.currentLevel ?? 0;
+        rebirths = s.rebirths ?? 0;
+        rebirthCost = s.rebirthCost ?? 100000000;
+        rebirthMultiplier = s.rebirthMultiplier ?? (1 + rebirths * 0.5);
+        superMoney = s.superMoney ?? 0;
+        clickRewardsUnlocked = s.clickRewardsUnlocked ?? false;
+        nextRewardAvailableAt = s.nextRewardAvailableAt ?? 0;
+      } catch (e) { }
+    }
+    window.addEventListener('DOMContentLoaded', () => {
+      loadProgress();
+      updateDisplay();
+      document.getElementById('reset-progress').addEventListener('click', () => {
+        if (confirm('Are you sure you want to reset all progress?')) {
+          localStorage.removeItem('cuteClickerSave');
+          window.location.reload();
+        }
+      });
+    });
     updateDisplay();
   </script>
 </body>
